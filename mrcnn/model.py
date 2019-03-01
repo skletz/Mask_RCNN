@@ -2274,7 +2274,7 @@ class MaskRCNN():
             "*epoch*", "{epoch:04d}")
 
     def train(self, train_dataset, val_dataset, learning_rate, epochs, layers,
-              augmentation=None, custom_callbacks=None, no_augmentation_sources=None):
+              augmentation=None, custom_callbacks=None, no_augmentation_sources=None, use_multicpu=True, nr_workers=None):
         """Train the model.
         train_dataset, val_dataset: Training and validation Dataset objects.
         learning_rate: The learning rate to train with
@@ -2359,7 +2359,15 @@ class MaskRCNN():
         if os.name is 'nt':
             workers = 0
         else:
-            workers = multiprocessing.cpu_count()
+            cpu_cnt = multiprocessing.cpu_count()
+            if nr_workers is not None:
+                if nr_workers > cpu_cnt:
+                    workers = cpu_cnt
+                else:
+                    workers = nr_workers
+            else:
+                workers = cpu_cnt
+
 
         self.keras_model.fit_generator(
             train_generator,
@@ -2371,7 +2379,7 @@ class MaskRCNN():
             validation_steps=self.config.VALIDATION_STEPS,
             max_queue_size=100,
             workers=workers,
-            use_multiprocessing=True,
+            use_multiprocessing=use_multicpu,
         )
         self.epoch = max(self.epoch, epochs)
 
