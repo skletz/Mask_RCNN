@@ -1823,7 +1823,7 @@ class MaskRCNN():
     The actual Keras model is in the keras_model property.
     """
 
-    def __init__(self, mode, config, model_dir):
+    def __init__(self, mode, config, model_dir, log_timestamp=True):
         """
         mode: Either "training" or "inference"
         config: A Sub-class of the Config class
@@ -1833,7 +1833,7 @@ class MaskRCNN():
         self.mode = mode
         self.config = config
         self.model_dir = model_dir
-        self.set_log_dir()
+        self.set_log_dir(log_timestamp=log_timestamp)
         self.keras_model = self.build(mode=mode, config=config)
 
     def build(self, mode, config):
@@ -2236,7 +2236,7 @@ class MaskRCNN():
                 log("{}{:20}   ({})".format(" " * indent, layer.name,
                                             layer.__class__.__name__))
 
-    def set_log_dir(self, model_path=None):
+    def set_log_dir(self, model_path=None, log_timestamp=True):
         """Sets the model log directory and epoch counter.
 
         model_path: If None, or a format different from what this code uses
@@ -2265,8 +2265,16 @@ class MaskRCNN():
                 print('Re-starting from epoch %d' % self.epoch)
 
         # Directory for training logs
-        self.log_dir = os.path.join(self.model_dir, "{}{:%Y%m%dT%H%M}".format(
-            self.config.NAME.lower(), now))
+        if log_timestamp:
+            self.log_dir = os.path.join(self.model_dir, "{}{:%Y%m%dT%H%M}".format(
+                self.config.NAME.lower(), now))
+        else:
+            # Directory for eval logs
+            self.log_dir = os.path.join(self.model_dir, self.config.NAME.lower())
+
+        # Create log_dir if it does not exist
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
 
         # Path to save after each epoch. Include placeholders that get filled by Keras.
         self.checkpoint_path = os.path.join(self.log_dir, "mask_rcnn_{}_*epoch*.h5".format(
