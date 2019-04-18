@@ -2271,6 +2271,7 @@ class MaskRCNN():
         else:
             # Directory for eval logs
             self.log_dir = os.path.join(self.model_dir, self.config.NAME.lower())
+            # self.log_dir = self.model_dir
 
         # Create log_dir if it does not exist
         if not os.path.exists(self.log_dir):
